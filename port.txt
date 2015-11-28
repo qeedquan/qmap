@@ -1,0 +1,35 @@
+Issues when porting:
+
+    This is an estimation of the porting issues; I haven't
+    tried porting it, so there may be more.
+
+SIZEOF:
+
+    The code is rife with these assumptions:
+
+        sizeof(int) == sizeof(long) == 4
+        sizeof(short) == 2
+
+    You'll have to fix a lot of stuff, including the bsp file
+    formats in bspfile.h, if this isn't true.
+
+    The "VERTEX" macro assumes that sizeof(dvertex_t) == 12.
+
+    render.c has a macro which works if IEEE floating point,
+    sizeof(float) == sizeof(int).
+
+ENDIANNESS:
+
+    There are several little-endian specific pieces of code:
+       FLOAT_TO_INT()
+       FLOAT_TO_FIX()
+
+    You also have to enable the byteswapping code in bspfile.c
+
+OS specific:
+
+    Obviously all of the I/O things have to be worked on.
+    The "I" is all in main.c, and the "O" is all in mode.c.
+    Support for > 8-bit displays will require changing lots
+    of code, since the surface cache would want to output
+    16-bit...

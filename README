@@ -1,0 +1,5 @@
+Tweak of Sean Barrett (nothings.org) QMAP viewer to use SDL2 instead
+of DOS graphics.
+Use build.sh to build, need SDL2 and a C compiler.
+
+Look online for pak files something like pak0.pak.

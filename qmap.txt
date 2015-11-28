@@ -1,0 +1,71 @@
+QMAP: A quake level viewer in 2000 lines of C
+
+This is a relatively simple Quake level viewer.
+It is not intended to be particularly useful as
+a program, but neither did I write it "just to
+see if I could"; I wrote it explicitly for the
+purpose of releasing the source to the net, hopefully
+to help educate people by letting them see an
+entire put-together system.
+
+(I don't think this will undercut id in anyway; if you
+couldn't have written QMAP yourself, you probably won't
+be able to write moving bsp objects, z-buffered alias
+models, and the rest of a game.  And, just to be fair,
+the fact that QMAP is as fast as it is (which is not very)
+owes more to id's cleverness in the map format than to
+my skill.)
+
+I do not claim it is anything great, but rather it
+is a practical, coherent, "correct" implementation.
+I hope it'll be a useful for other people to
+see how it was put together.
+
+The goals for QMAP were simple:
+   speed
+   simplicity
+   readability
+
+Speed and simplicity are tradeoffs; I want it to
+run reasonably fast, since the whole challenge
+of writing a Quake-style render is that of performance.
+
+However, I wanted it to be simple because I wanted to
+complete it in only a few days.  As such I have eschewed
+quite a lot of reasonable functionality; see the feature
+list below.  For the most part, I've restricted it to
+code necessary for a core viewer, and to code which I
+already have experience writing (so I code much faster).
+
+Additionally, I preferred to keep the code as simply
+structured and as readable as possible, since the point
+of the code is to release it to the public.
+
+Featurelist:
+
+   - perspective texture mapping (16-pixel affine subdivision)
+   - subpixel & subtexel correct
+   - surface-cached lighting
+   - bsp sorted, painter's algorithm
+   - precomputed PVS culling of leaves
+   - dynamic PVS culling of nodes
+   - frustrum culling of nodes and leaves
+   - backface culling of polys ("for free" with bsp sort)
+
+Anti-featurelist (things not implemented):
+
+   - texture clamping (coded but disabled for speed)
+   - edge/span clipping
+   - sky/water textures
+   - moving bsp objects
+   - z-buffered objects
+   - dynamic lighting
+   - physics
+   - game
+
+Currently, polygons are drawn back-to-front, but there's a
+function call per span, so it's quite possible to hook the
+span call in combination with span clipping or edge-list stuff,
+if you want to try it.  I have only a little experience with
+span clipping and none with edge-list, so I chose not to try
+to code any of that.

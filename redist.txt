@@ -1,0 +1,9 @@
+QMAP: Quake level viewer
+Originally copyright 1997 Sean Barrett
+
+Although the files claim to be copyright 1997, I'm placing
+this in the public domain. You can do anything you want with
+the source code, and don't have to give me any credit. Feel
+free to remove the copyright notices.
+
+

@@ -1,0 +1,24 @@
+Obvious open optimizations:
+
+texture mapper speedup
+  - assembly affine-span drawer
+  - optimize perspective math to compute less stuff
+  - overlap perspective divide (and write outer perspective loop in assembly)
+  - combine out perspective loop and inner affine loop together
+
+reduce overdraw
+  - span clipper or edge-table system
+
+other inner loops
+  - assembly surface builder
+  - assembly scan conversion
+
+outer rendering traversals
+  - mark nodes with visible faces (need face->node mapping; see design.txt)
+  - PVS data is an RLE bit-array, which I decode into a non-RLE bit-array.
+    This decoding would be much faster if the alignment of the bit-arrays
+    were different.
+  - precompute node-PVS data, and encode in BSP-order (see design.txt); then
+    the current first two steps (decode leaf PVS and propogate up BSP tree)
+    can be a single step which only visits as much of the tree as is visible,
+    instead of the whole things.

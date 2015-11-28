@@ -1,0 +1,44 @@
+Source code:
+
+  files        lines    description
+  -----        -----    -----------
+  main.c        135      general setup code
+  mode.c         58      graphics setup, blitting, palette
+
+  3d.c          216      general 3d routines
+  poly.c        134      polygon scan conversion
+  tm_c.c        164      C perspective texture mapper
+  tmap3d.c      151      general setup of tmapping stuff in 3d
+  surface.c     196      surface builder & cacher
+
+  clippoly.c    132      clip polygon to view frustrum
+
+  render.c      140      Quake-specific database scanning
+  bsp.c          98      various "recurse-through-bsp-tree" code
+
+  readbsp.c     563      hacked upon version of Carmack's bspfile.c
+
+               1987 total
+
+Text files:
+
+  design.txt             design issues/decisions
+  optimize.txt           obvious directions for optimization
+  manifest.txt           list of all files (this file)
+  port.txt               info on porting the code
+  qmap.txt               overview
+  readme.txt             executable instructions
+  redist.txt             redistribution information
+
+Header files (not counting ones with a matching .c file):
+
+  bspfile.h              data layout of Quake bsp file, from Carmack's utils
+  cmdlib.h               file used by bspfile.*
+  fix.h                  general fixed-point macros
+  s.h                    general typedefs
+  scr.h                  screen globals
+
+Other files:
+  makefile               watcom 9.5 makefile
+  qmap.lnk               watcom 9.5 link file
+

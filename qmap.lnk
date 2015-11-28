@@ -1,0 +1,15 @@
+option quiet
+option map=qmap.map
+debug all
+file main.obj
+file poly.obj 
+file render.obj
+file 3d.obj
+file mode.obj
+file bsp.obj
+file readbsp.obj
+file clippoly.obj
+file tm_c.obj
+file tmap3d.obj
+file surface.obj
+name qmap

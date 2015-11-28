@@ -1,0 +1,157 @@
+This document describes some of the various
+design/coding issues I encountered while
+writing QMAP.
+
+TRAVERSING THE ENTIRE BSP TREE
+
+It seems to me that it's impossible to write a Quake
+renderer which doesn't traverse the entire BSP tree
+(even allowing for the PVS) in the worst case that the
+camera is in one corner of the level facing the whole
+thing--unless you modify the PVS to contain PVS info
+for nodes as well as leaves.
+
+Here are some sample rendering strategies:
+
+Strategy 1:
+
+    Iterate over all leaves in PVS; mark all
+       polygons as visible.
+
+    Recurse over all bsp nodes in frustrum;
+       draw every marked polygon on this node
+
+  problem: this tests _every_ polygon in the database
+    to see if it's been marked, in worst case of entire
+    level in frustrum
+
+Strategy 2:
+
+    Augment the database so that each face stores
+       which node it is stored on.
+
+    Iterate over all leaves in PVS; mark all polygons
+       as visible, and all nodes for each polygon as visible.
+
+    Recurse over all bsp nodes in fustrum;
+       for each node marked as having visible polygons
+          draw every marked polygon
+
+  problem: this tests _every_ node in the database to
+     see if it's marked (in worst case of entire level
+     in frustrum)
+
+Both of the above approaches can also be augmented so
+they only iterate over leaves in PVS _and_ in frustrum,
+which will cull out most polygons which are entirely
+outside the frustrum.
+
+Of course, it might be nice to not even frustrum test
+them all, for example by doing something like this:
+
+Strategy 3:
+
+   Augment db as above
+
+   Iterate over all leaves in PVS
+      tag leaf as visible
+
+   Recurse over all bsp nodes in frustrum
+      for every leaf in frustrum
+         if that leaf is tagged as visible, mark all polygons, etc.
+
+   Recurse over all bsp nodes in frustrum
+      For every marked node,
+         draw all marked polygons
+
+  problem: this still tests every node in the frustrum
+      during the first recursion
+
+The following strategy has the same problem, but more level performance:
+
+Strategy 4:
+
+   Iterate over all leaves in PVS
+      tag leaf as visible
+
+   Recurse over all bsp nodes
+      if either child is tagged as visible, tag as visible
+      (i.e. recursive propogate up PVS information)
+
+   Recurse over all nodes "in" PVS and in frustrum
+      (if not in frustrum, mark as not "in" PVS)
+      for every leaf in frustrum
+         if that leaf is tagged as visible, mark all polygons visible
+
+   Recurse over all nodes "in" PVS and in frustrum (cached)
+      draw every marked polygon on this node
+
+  problem: the first recursion still visits every node in tree
+
+This is the approach I've taken.  No matter how much of the
+scene is in the frustrum, the first recursion does the same
+amount of work (which levels performance).  It's also very
+simple, e.g. no frustrum checking etc.  This then significantly
+speeds up the other two recursions, which don't waste time
+frustrum checking parts of the level which don't include
+leaves in the PVS.
+
+A simple augmentation to the above would be to cache the
+node-PVS data from frame-to-frame, and only recompute it
+when the camera changes leaves.  A more "level" approach
+is to recode the PVS data to include information per node;
+the information could also be encoded into a preorder
+traversal of the BSP tree, instead of run-length in leaf order.
+This means that if a given node isn't visible, no bits would
+be output for any of its subtree; this should be a relatively
+well-compressed format as well (2 bits per visible node).
+
+CONVERTING QUAKE DATA TO P,M,N
+
+I use the "P,M,N" texture gradient approach which I
+wrote up in the old PCGPE--the (u,v) for a point on
+the VEC on the polygon comes from P + uM + vN = VEC.
+To do this with Quake, you have to convert Quake's
+format (in which the S,T vectors are allowed to lie
+not-in-the-plane-of-the-polygon) to my format, and
+you have to compute an appropriate P.  I found this
+wasn't hard to get sorta working, since most S,T
+vectors _do_ lie in the plane.  This was also the
+part of the code that had the most bugs for the
+longest (it took me about 6 hours of work to get
+right--I had M&N wrong, but couldn't tell, and
+thought the bug was in P).
+
+MAGIC NUMBERS
+
+People often ask how the 9 magic numbers (which turn out
+to be cross-products) are derived.  (I never call them
+cross-products, because the derivation doesn't involve
+cross-products, but rather determinants of matrices.)
+
+Computing the 9 magic numbers from P,M,N:
+
+compute 9 magic numbers
+  P + uM + vN = (x,y,z)     ; definition of P,M,N
+  x/z = i, -y/z = j         ; definition of perspective
+
+  P + uM = vN = (iz,-jz,z)  ; derived equation: math for a "raycast"
+
+  uMx + vNx + -i*z = -Px    ; write out as 3 simultaneous equations
+  uMy + vNy +  j*z = -Py
+  uMz + vNz + -1*z = -Pz
+
+   apply cramers rule (take determinant of various 3x3 matrices):
+      c =  Mx*(-Ny-jNz) + My*(-Nz*i+Nx) + Mz*(Nx*j+Ny*i)
+      a = -Px*(-Ny-jNz) - Py*(-Nz*i+Nx) - Pz*(Nx*j+Ny*i)
+      b =  Mx*( Py+jPz) + My*( Pz*i-Px) + Mz*(-Px*j-Py*i)
+
+      u = a/c
+      v = b/c
+
+   make them gradients of (i,j)
+
+      c = i*(Ny*Mz-Nz*My) + j*(Nx*Mz-Nz*Mx) + Nx*My-Ny*Mx
+      a = i*(Py*Nz-Pz*Ny) + j*(Px*Nz-Pz*Nx) + Px*Ny-Py*Nx
+      b = i*(Pz*My-Py*Mz) + j*(Pz*Mx-Px*Mz) + Py*Mx-Px*My
+

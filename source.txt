@@ -1,0 +1,249 @@
+QMAP: Quake level viewer
+Copyright 1997 Sean Barrett
+
+QMAP SOURCE CODE
+
+This distribution includes complete source code for QMAP
+which will compile under Watcom 9.5.  It's almost all
+standard ("ANSI") C, except for the use of // for comments.
+
+Subsections of this file:
+  VARIOUS NOTES ABOUT THE SOURCE
+  TEXT FILES
+  SHORT DESCRIPTION OF ALL THE FUNCTIONS
+
+--==--
+
+  VARIOUS NOTES ABOUT THE SOURCE
+
+  -  Most of the C files are under 200 lines, making
+     them pleasant bite-sized chunks.  Most files are
+     very modular, except "render.c" and "bsp.c",
+     which intertwince to do high-level culling and sorting
+
+  -  Things are a little less commented than I might like,
+     but I don't want the source code to get above 2000
+     lines.  I might write up some standalone documents
+     about some of the hairy places.
+
+  -  Some numeric constants aren't #defined.  Mostly this
+     shows up in the polygon code and polygon clipper for
+     # of points allowed; that's a bug.
+
+     There's also 320, 200, 159.5 and 99.5's all through the
+     code.  This hopefully will call reader's attention to
+     whether a particular place uses the "offset by 0.5" or not,
+     rather than hiding such details behind a macro or variable
+     whose name would just mean "the right value to add at this stage".
+     (One of the problems with using matrices.)
+
+     Nonetheless, all of that stuff should be put into variables
+     so the screen can be resized.
+
+  -  Some places in the code have more than one statement
+     per line.  This is not so I can have only 2000 lines,
+     but is probably one of my idioms.  I prefer to squeeze
+     things vertically so I can see entire functions at once.
+
+     Here's an example idiom:
+        var = <computation>; if (var <test-for-fixup>) var = <fixup>;
+
+     Here's an instance of this idiom:
+        x = y % width; if (x < 0) x += width;   // fixup for signed mod
+
+  TEXT FILES
+
+  manifest.txt    contains vague description of each .C file
+  optimize.txt    obvious things to do to optimize QMAP
+  design.txt      various design issues/decisions in QMAP
+  bug.txt         notes on known bugs
+  port.txt        notes on porting to other platforms
+  redist.txt      redistribution notes
+
+  SHORT DESCRIPTION OF ALL THE FUNCTIONS
+
+    main.c
+
+      run_sim()
+         Updates camera location, reads and process keyboard input,
+         invokes the renderer and the blit
+
+      load_graphics()
+         Reads the quake graphics lumps (palette.lmp and colormap.lmp)
+
+      main()
+
+    mode.c
+
+      blit()
+         Blits a 320x200 screen
+
+      set_pal() 
+         Sets a palette stored as 0..255 (not VGA 0..63)
+
+      set_lores()
+         Enable 320x200 mode
+
+      set_text()
+         Enable 80x25 text mode
+
+      fatal_error()
+         Display error message (implements fatal() macro)
+   
+    3d.c
+
+      Note that worldspace is x-right, y-depth, z-up (which
+      is right-handed and "map"-like), but post-transformation
+      I swap y&z so cameraspace is x-right, y-up, z-depth.
+
+      dot_vec_dbl()
+         Dot product of a vector with a vector of doubles
+
+      rot_x()
+      rot_y()
+      rot_z()
+         Rotate a double-vector around a given axis.
+
+      rotate()
+         Rotate a double-vector by an "angle vector".
+
+      set_view_info()
+         Initialize the camera at a location and orientation
+
+      dist2_from_viewer()
+         Compute the squared pythagoran distance from the viewpoint
+
+      rotate_c2w()
+         Rotate a vector from camera space back to viewspace
+
+      rotate_vec()
+         rotate_c2w(), but in place (replaces original vector)
+
+      compute_view_frustrum() [Quake specific]
+         returns view frustrum as four world-space planes
+
+      transform_point_raw()
+         transform a point from world space to camera space
+
+      transform_vector()
+         transform a vector from world space to camera space
+         (like transform_point_raw, but no translation)
+
+      project_point()
+         perspective projection
+
+      code_point()
+         Compute bitmask of which frustrum planes point is behind
+
+      transform_point()
+         transform, code, and project a point
+
+      transform_rotated_point()
+         code and project an already transformed point
+
+    poly.c
+
+      scan_convert()
+        Generate span start/end points from an edge
+
+      draw_poly()
+        Scan convert polygon and call qmap_draw_span with each
+
+      draw_face() [Quake specific]
+        Given Quake face, convert to poly, transform, clip
+        to frustrum, and draw
+
+    tm.c
+
+      qmap_draw_affine()
+        Draw an affine (linear) span of pixels
+
+      qmap_draw_span()
+        Draw a perspective-corrected span using previously computed
+        gradients, 16-pixel affine subdivision, and qmap_draw_affine()
+
+    tmap3d.c   [all Quake specific]
+
+      compute_mip_level()
+        Given a Quake face, compute a mipmap level (poor, but quick)
+
+      get_face_extent()
+        Given a Quake face, compute a bounding box of the (u,v)s
+
+      compute_texture_gradients()
+        Given a Quake face, compute P,M,N, then the 9 magic numbers
+        (the texture gradients used by qmap_draw_span)
+
+    surface.c
+
+      get_raw_tmap() [Quake specific]
+        Given a texture and mip level, return the Quake mip texture
+        as a "bitmap". 
+         
+     (various cache managment routines omitted)
+
+      get_tmap() [Quake specific]
+        Given a face number and mip level, check if the texture
+        is in the cache and just return it.  Otherwise, compute
+        the extents, allocate it, and build it.
+
+      build_block()
+        Build one lightmap square of texture
+
+    clippoly.c
+
+      clip_poly()
+        Do "3D" clipping to clip a polygon to the view frustrum.
+
+    render.c  [all Quake specific]
+
+      bbox_inside_plane()
+        Check if an axially-aligned bounding box lies (partly)
+        inside the given plane.  Algorithm from a graphics gem
+        whose name was totally unrelated and I don't remember
+        it anymore; the principle is easily derivable though.
+
+      node_in_frustrum()
+        Test if a given BSP node is partly inside the frustrum
+
+      leaf_in_frustrum()
+        Test if a given BSP leaf is partly inside the frustrum
+
+      mark_leaf_faces()
+        For given leaf, mark all faces which are referenced in
+        it as being visible
+
+      visit_visible_leaves()
+        For each leaf in the PVS, set a flag
+
+      render_node_faces()
+        Draw all of the front-facting polygons associated with
+        a node which have been marked visible
+
+      render_world()
+        Draw the whole world
+
+    bsp.c    [All Quake specific]
+
+      find_leaf()
+        Determine what leaf a given point is in
+
+      bsp_render_node()
+        Recurse through BSP nodes back-to-front, drawing marked polygons
+
+      bsp_render_world()
+        Top level entry to bsp_render_node()
+
+      bsp_find_visible_nodes()
+        Recursively propogate the leaf PVS info up the tree
+
+      bsp_explore_node()
+        Recurse through BSP tree; for every leaf in PVS and frustrum,
+        call mark_leaf_faces()
+
+      bsp_visit_visible_leaves()
+        Entry point to bsp_explore_node()
+
+    bspfile.c
+
+      From a Quake utilties distribution.

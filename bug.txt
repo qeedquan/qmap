@@ -1,0 +1,33 @@
+QMAP: Quake level viewer
+Copyright 1997 Sean Barrett
+
+Unless a bug is really heinous, I probably won't fix it.
+Bugs of the form "This doesn't run on my machine, and I
+know a two line fix to make it work" I'm interested in.
+Bugs like those listed below (pure algorithmic bugs) I'm
+interested in as well.
+
+I do not intend to merge back in ported versions of QMAP;
+the source is small enough (and unlikely to undergo
+further revision) that such distributions can stand alone.
+
+To find the current bug contact email address, check
+the distribution site, which is currently:
+
+   http://www.geocities.com/SiliconValley/Vista/7788/qmap.htm
+
+At this writing, the email address is: buzzard@world.std.com
+
+Known bugs:
+
+   None
+
+Known missing features (not bugs, so don't report)
+
+   Water, sky don't light right.  Don't render right either.
+
+Fixed bugs:
+
+   Some places light totally weird.  Turns out somebody decided
+   to try to save a pointless amount of memory by specially coding
+   all-black lightmaps, and I wasn't checking for it.
