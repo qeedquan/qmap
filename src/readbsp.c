@@ -67,7 +67,7 @@ char *copystring(char *s)
 filelength
 ================
 */
-int filelength (FILE *f)
+int xfilelength (FILE *f)
 {
    int      pos;
    int      end;
@@ -133,7 +133,7 @@ int    LoadFile (char *filename, void **bufferptr)
    void    *buffer;
 
    f = SafeOpenRead (filename);
-   length = filelength (f);
+   length = xfilelength (f);
    buffer = malloc (length+1);
    ((char *)buffer)[length] = 0;
    SafeRead (f, buffer, length);
