@@ -44,7 +44,6 @@ void Error (char *error, ...)
 {
    va_list argptr;
 
-   set_text();
    printf ("************ ERROR ************\n");
 
    va_start (argptr,error);
@@ -231,7 +230,6 @@ float   BigFloat (float l)
 
 
 #else
-
 
 short   BigShort (short l)
 {
@@ -506,10 +504,10 @@ int CopyLump (int lump, void *dest, int size)
    length = header->lumps[lump].filelen;
    ofs = header->lumps[lump].fileofs;
    
-   if (length % size)
-      Error ("LoadBSPFile: odd lump size");
+   if (length % size || length < 0 || ofs < 0)
+      Error ("LoadBSPFile: odd lump size: length: %d offset: %d", length, ofs);
    
-   memcpy (dest, (byte *)header + ofs, length);
+   memmove (dest, (byte *)header + ofs, length);
 
    return length / size;
 }
@@ -521,7 +519,7 @@ LoadBSPFile
 */
 void   LoadBSPFile (char *filename)
 {
-   int         i;
+   unsigned i;
    
 //
 // load the file header
@@ -529,12 +527,12 @@ void   LoadBSPFile (char *filename)
    LoadFile (filename, (void **)&header);
 
 // swap the header
-   for (i=0 ; i< sizeof(dheader_t)/4 ; i++)
+   for (i=0 ; i < sizeof(dheader_t)/4 ; i++)
       ((int *)header)[i] = LittleLong ( ((int *)header)[i]);
 
    if (header->version != BSPVERSION) {
       printf("******* WARNING ********\n");
-      printf("%s is version %i, not %i", filename, i, BSPVERSION);
+      printf("%s is version %u, not %i\n", filename, i, BSPVERSION);
    }
 
    nummodels = CopyLump (LUMP_MODELS, dmodels, sizeof(dmodel_t));

@@ -5,20 +5,11 @@
  *   General setup control, main "sim" loop
  */
 
-#if 0
-#include <conio.h>
-#include <dos.h>
-#endif
-
 #include "bspfile.h"
 #include "mode.h"
 #include "3d.h"
 #include "fix.h"
 #include "scr.h"
-
-#if 0
-#include "char.h"
-#endif
 
 #include "tm.h"
 #include "render.h"
@@ -70,9 +61,6 @@ void run_sim(void)
 
       set_view_info(&cam_loc, &cam_ang);
       render_world(&cam_loc);
-#if 0
-      blit(scr_buf);
-#endif
       p = scr_buf;
       q = sdl_buf;
       for (y = 0; y < 200; y++) {
@@ -120,35 +108,8 @@ void run_sim(void)
              }
          }
       }
-#if 0
-      while (kbhit()) {
-         int c = getch();
-         switch(c) {
-            case 'Q': case 27:
-               return;
-
-            case 'v': cam_angvel.tx += ANG_STEP; break;
-            case 'r': cam_angvel.tx -= ANG_STEP; break;
-            case 'q': cam_angvel.ty += ANG_STEP; break;
-            case 'e': cam_angvel.ty -= ANG_STEP; break;
-            case 'd': cam_angvel.tz += ANG_STEP; break;
-            case 'a': cam_angvel.tz -= ANG_STEP; break;
-
-            case 'c': cam_vel.x += VEL_STEP; break;
-            case 'z': cam_vel.x -= VEL_STEP; break;
-            case '1': cam_vel.z -= VEL_STEP; break;
-            case '3': cam_vel.z += VEL_STEP; break;
-            case 'x': cam_vel.y -= VEL_STEP; break;
-            case 'w': cam_vel.y += VEL_STEP; break;
-               
-            case ' ':
-               cam_vel.x = cam_vel.y = cam_vel.z = 0;
-               cam_angvel.tx = cam_angvel.ty = cam_angvel.tz = 0;
-               break;
-         }
-      }
-#endif
-      // "PHYSICS"
+      
+	  // "PHYSICS"
 
       cam_ang.tx += cam_angvel.tx;
       cam_ang.ty += cam_angvel.ty;
@@ -180,7 +141,6 @@ void load_graphics(void)
    fread(pal, 1, 768, f);
    fclose(f);
    memcpy(palette, pal, 768);
-   set_pal(pal); 
    if ((f = fopen("colormap.lmp", "rb")) == NULL)
       fatal("Couldn't read colormap.lmp\n");
    fread(colormap, 256, 64, f);
@@ -193,7 +153,6 @@ int main(int argc, char **argv)
       printf("Usage: qmap <bspfile>\n");
    } else {
       LoadBSPFile(argv[1]);
-      set_lores();
       load_graphics();
       init_cache();
       setup_default_point_list();
@@ -212,7 +171,6 @@ int main(int argc, char **argv)
       SDL_RenderSetLogicalSize(renderer, 320, 200);
 
       run_sim();      
-      set_text();
    }
    return 0;
 }
